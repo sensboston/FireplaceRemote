@@ -1,0 +1,961 @@
+#pragma once
+
+// ========================================
+// HTML PAGE WITH PWA SUPPORT (READABLE VERSION)
+// ========================================
+// This is the readable, well-formatted version of the web interface.
+// For production, use html_compressed.h which is minified.
+// To switch between versions, see USE_COMPRESSED_HTML in FireplaceRemote.ino
+
+const char index_html[] PROGMEM = R"HTMLPAGE(
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fireplace Remote Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fireplace">
+  <meta name="theme-color" content="#e74c3c">
+  <link rel="icon" href="https://senssoft.com/fp.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="https://senssoft.com/fp.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="https://senssoft.com/fp.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root {
+      --bg-color: #f0f0f0;
+      --text-color: #333;
+      --panel-bg: white;
+      --panel-border: #ddd;
+      --info-text: #666;
+      --divider-color: #ccc;
+      --input-border: #ccc;
+      --input-bg: white;
+      --select-bg: white;
+    }
+    body.dark-theme {
+      --bg-color: #1a1a1a;
+      --text-color: #e0e0e0;
+      --panel-bg: #2d2d2d;
+      --panel-border: #444;
+      --info-text: #aaa;
+      --divider-color: #444;
+      --input-border: #555;
+      --input-bg: #3a3a3a;
+      --select-bg: #3a3a3a;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 8px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 13px;
+      -webkit-user-select: none;
+      user-select: none;
+      overflow: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .page-title {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 4px auto 8px auto;
+      padding: 0;
+      max-width: 420px;
+      text-transform: uppercase;
+      position: relative;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .page-title.off {
+      color: #444;
+    }
+    .page-title.on {
+      color: transparent;
+    }
+    .fire-strips {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 420px;
+      height: 35px;
+      filter: blur(1px);
+      mask: url(#fire-text-mask);
+      -webkit-mask: url(#fire-text-mask);
+    }
+    .page-title.on .fire-strips {
+      display: flex;
+    }
+    .fire-strip {
+      flex: 1;
+      background: linear-gradient(to top,
+        #0a0000 0%, #1a0000 5%, #2a0000 10%, #4a0000 15%,
+        #8B0000 20%, #B22222 25%, #FF0000 30%, #FF2200 35%,
+        #FF4500 40%, #FF6600 50%, #FF8800 60%, #FFAA00 70%,
+        #FFCC00 80%, #FFEE00 90%, #FFFF00 100%);
+      background-size: 100% 160%;
+      background-position: 0% 100%;
+      transform-origin: bottom;
+    }
+    .temp-display {
+      position: relative;
+      font-size: 26px;
+      font-weight: bold;
+      color: #3498db;
+      padding: 8px;
+      background-color: var(--panel-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin: 6px auto 10px auto;
+      max-width: 420px;
+      transition: background-color 0.3s ease;
+    }
+    .info-line {
+      font-size: 14px;
+      color: var(--info-text);
+      margin: 6px 0 16px 0;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      transition: color 0.3s ease;
+    }
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 420px;
+      margin: 0 auto 12px auto;
+    }
+    button {
+      padding: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button svg {
+      width: 22px;
+      height: 22px;
+      pointer-events: none;
+    }
+    /* Power button - Red */
+    #power { background-color: #e74c3c; color: white; }
+    #power svg { fill: white; }
+
+    /* More Hot button - Orange */
+    #moreHot { background-color: #e67e22; color: white; }
+    #moreHot svg { fill: white; }
+
+    /* Less Hot button - Green */
+    #lessHot { background-color: #27ae60; color: white; }
+    #lessHot svg { fill: white; }
+
+    /* Toggle Air button - Blue */
+    #toggleAir { background-color: #3498db; color: white; }
+    #toggleAir svg { fill: white; }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 80px;
+      height: 30px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 30px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #3498db;
+    }
+    input:checked + .slider:before {
+      transform: translateX(50px);
+    }
+
+    .main-check {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .temp-control-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .temp-control-row .main-check {
+      flex: 0 0 auto;
+      font-size: 13px;
+      margin-bottom: 0;
+      margin-right: auto;
+      white-space: nowrap;
+    }
+    .temp-control-row select {
+      flex: 1;
+      max-width: calc(50% - 14px);
+      margin-bottom: 0;
+      margin-top: 3px;
+      padding: 6px;
+      font-size: 13px;
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      background-color: var(--select-bg);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    input[type="checkbox"] {
+      margin-right: 5px;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .time-range select {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 7px;
+      font-size: 13px;
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      background-color: var(--select-bg);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    .days-selector {
+      display: flex;
+      justify-content: space-between;
+      margin: 7px 0;
+    }
+    .day-check {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 10px;
+    }
+    .day-check input {
+      margin-top: 2px;
+      width: 14px;
+      height: 14px;
+    }
+    .time-range {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .time-range select {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .time-range span {
+      font-size: 11px;
+    }
+
+    .settings-toggle {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      z-index: 10;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 4px;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--info-text);
+      transition: color 0.3s ease;
+    }
+    .settings-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1999;
+    }
+    .settings-backdrop.open {
+      display: block;
+    }
+    .settings-panel {
+      display: none;
+      position: fixed;
+      top: 97px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 480px;
+      width: calc(100% - 20px);
+      background: var(--panel-bg);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 2000;
+      transition: background-color 0.3s ease;
+      overflow-x: hidden;
+    }
+    .settings-panel.open {
+      display: block;
+    }
+    .adv-setting {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .adv-setting label {
+      font-weight: bold;
+      font-size: 11px;
+      white-space: nowrap;
+      width: 200px;
+      flex-shrink: 0;
+      text-align: left;
+    }
+    .adv-setting input {
+      width: 80px;
+      padding: 6px;
+      font-size: 13px;
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      text-align: right;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      flex-shrink: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .theme-toggle > label:first-child {
+      font-weight: bold;
+      font-size: 11px;
+      white-space: nowrap;
+      width: 200px;
+      flex-shrink: 0;
+      text-align: left;
+    }
+    .reset-button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 18px;
+    }
+    .reset-button:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Load theme immediately to prevent flash
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+      }
+    })();
+  </script>
+
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <mask id="fire-text-mask" x="0" y="0" width="420" height="35" maskUnits="userSpaceOnUse">
+        <rect width="420" height="35" fill="black"/>
+        <text x="210" y="20" text-anchor="middle" dominant-baseline="middle"
+              font-family="Arial, sans-serif" font-size="26" font-weight="bold"
+              letter-spacing="1" fill="white">DURAFLAME REMOTE</text>
+      </mask>
+    </defs>
+  </svg>
+
+  <h1 class="page-title off" id="pageTitle">
+    <span>Duraflame Remote</span>
+    <div class="fire-strips" id="fireStrips"></div>
+  </h1>
+  <div class="temp-display">
+    <div class="settings-toggle" onclick="toggleSettings()">☰</div>
+    Indoor: <span id="temperature">--</span><span id="tempUnit">&deg;F</span>
+  </div>
+  <div class="info-line">
+    <span>Outdoor: <span id="outdoor">--</span><span id="outdoorUnit">&deg;F</span></span>
+    <span id="datetime">--</span>
+  </div>
+
+  <div class="button-container">
+    <button id="power" onclick="sendCommand(1, this)">
+      <svg viewBox="0 0 24 24"><path d="M13,3h-2v10h2V3z M17.83,5.17l-1.42,1.42C17.99,7.86,19,9.81,19,12c0,3.87-3.13,7-7,7s-7-3.13-7-7 c0-2.19,1.01-4.14,2.58-5.42L6.17,5.17C4.23,6.82,3,9.26,3,12c0,4.97,4.03,9,9,9s9-4.03,9-9C21,9.26,19.77,6.82,17.83,5.17z"/></svg>
+      POWER ON/OFF
+    </button>
+    <button id="moreHot" onclick="sendCommand(2, this)">
+      <svg viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+      HOT +
+    </button>
+    <button id="lessHot" onclick="sendCommand(3, this)">
+      <svg viewBox="0 0 24 24"><path d="M22,11h-4.17l3.24-3.24l-1.41-1.42L15,11h-2V9l4.66-4.66l-1.42-1.41L13,6.17V2h-2v4.17L7.76,2.93L6.34,4.34L11,9v2H9 L4.34,6.34L2.93,7.76L6.17,11H2v2h4.17l-3.24,3.24l1.41,1.42L9,13h2v2l-4.66,4.66l1.42,1.41L11,17.83V22h2v-4.17l3.24,3.24 l1.42-1.41L13,15v-2h2l4.66,4.66l1.41-1.42L17.83,13H22V11z"/></svg>
+      HOT -
+    </button>
+    <button id="toggleAir" onclick="sendCommand(4, this)">
+      <svg viewBox="0 0 24 24"><path d="M14.5,17c0,1.65-1.35,3-3,3s-3-1.35-3-3h2c0,0.55,0.45,1,1,1s1-0.45,1-1s-0.45-1-1-1H2v-2h9.5 C13.15,14,14.5,15.35,14.5,17z M19,6.5C19,4.57,17.43,3,15.5,3S12,4.57,12,6.5h2C14,5.67,14.67,5,15.5,5S17,5.67,17,6.5 S16.33,8,15.5,8H2v2h13.5C17.43,10,19,8.43,19,6.5z M18.5,11H2v2h16.5c0.83,0,1.5,0.67,1.5,1.5S19.33,16,18.5,16v2 c1.93,0,3.5-1.57,3.5-3.5S20.43,11,18.5,11z"/></svg>
+      AIR FLOW TOGGLE
+    </button>
+  </div>
+
+  <div class="settings-backdrop" id="settingsBackdrop" onclick="toggleSettings()"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="theme-toggle">
+      <label>Theme (Light/Dark)</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="theme-toggle">
+      <label>Temperature Units (&deg;F/&deg;C)</label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="unitToggle" onchange="toggleUnits()">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="adv-setting">
+      <label id="hysteresisLabel">Temperature Hysteresis (&deg;F)</label>
+      <input type="number" id="hysteresis" min="0.5" max="10" step="0.5" onchange="saveAdvanced()">
+    </div>
+    <div class="adv-setting">
+      <label id="thresholdLabel">Outdoor Temperature Threshold (&deg;F)</label>
+      <input type="number" id="outdoorThreshold" min="30" max="80" step="1" onchange="saveAdvanced()">
+    </div>
+
+    <div style="border-top: 1px solid var(--panel-border); margin: 20px 0; transition: border-color 0.3s ease;"></div>
+
+    <div class="temp-control-row">
+      <label class="main-check">
+        <input type="checkbox" id="thermostatEnabled" onchange="autoSave()">
+        Keep Temperature
+      </label>
+      <select id="targetTemp" onchange="autoSave()">
+        <!-- Populated by JS -->
+      </select>
+    </div>
+
+    <label style="display: block; margin: 16px 0 8px 0; font-weight: bold; font-size: 11px;">Active Days</label>
+    <div class="days-selector">
+      <div class="day-check"><span>Mon</span><input type="checkbox" id="day0" onchange="autoSave()"></div>
+      <div class="day-check"><span>Tue</span><input type="checkbox" id="day1" onchange="autoSave()"></div>
+      <div class="day-check"><span>Wed</span><input type="checkbox" id="day2" onchange="autoSave()"></div>
+      <div class="day-check"><span>Thu</span><input type="checkbox" id="day3" onchange="autoSave()"></div>
+      <div class="day-check"><span>Fri</span><input type="checkbox" id="day4" onchange="autoSave()"></div>
+      <div class="day-check"><span>Sat</span><input type="checkbox" id="day5" onchange="autoSave()"></div>
+      <div class="day-check"><span>Sun</span><input type="checkbox" id="day6" onchange="autoSave()"></div>
+    </div>
+
+    <label style="display: block; margin: 16px 0 8px 0; font-weight: bold; font-size: 11px;">Active Hours</label>
+    <div class="time-range">
+      <select id="startHour" onchange="autoSave()">
+        <!-- Populated by JS -->
+      </select>
+      <span>to</span>
+      <select id="endHour" onchange="autoSave()">
+        <!-- Populated by JS -->
+      </select>
+    </div>
+
+    <div style="border-top: 1px solid var(--panel-border); margin: 24px 0 20px 0; transition: border-color 0.3s ease;"></div>
+
+    <button class="reset-button" onclick="resetWiFi()">RESET Wi-Fi</button>
+  </div>
+
+  <script>
+    let serverTime = null;
+    let clientTimeOffset = 0;
+    let useCelsius = false;
+    let indoorTempF = 0;
+    let outdoorTempF = 999;
+    let fireplaceOn = false;
+    let isSending = false;
+    let lastCommandTime = 0;
+
+    // Advanced settings stored in Fahrenheit (server always uses F)
+    let hysteresisF = 2.0;
+    let thresholdF = 50.0;
+
+    // Fire animation for title
+    let fireStrips = [];
+    let fireStripStates = [];
+    let fireAnimationFrame = null;
+    const NUM_FIRE_STRIPS = 80;
+
+    function initFireStrips() {
+      const container = document.getElementById('fireStrips');
+      if (fireStrips.length > 0) return; // Already initialized
+
+      for (let i = 0; i < NUM_FIRE_STRIPS; i++) {
+        const strip = document.createElement('div');
+        strip.className = 'fire-strip';
+        container.appendChild(strip);
+        fireStrips.push(strip);
+
+        fireStripStates.push({
+          position: 70 + Math.random() * 30,
+          velocity: 0,
+          targetPosition: 70 + Math.random() * 30,
+          scaleY: 1,
+          skewX: 0
+        });
+      }
+    }
+
+    function animateFireStrips() {
+      fireStripStates.forEach((state, index) => {
+        const leftNeighbor = index > 0 ? fireStripStates[index - 1] : null;
+        const rightNeighbor = index < NUM_FIRE_STRIPS - 1 ? fireStripStates[index + 1] : null;
+
+        let neighborInfluence = state.position;
+        let count = 1;
+
+        if (leftNeighbor) {
+          neighborInfluence += leftNeighbor.position;
+          count++;
+        }
+        if (rightNeighbor) {
+          neighborInfluence += rightNeighbor.position;
+          count++;
+        }
+
+        neighborInfluence /= count;
+
+        const targetWithInfluence = state.targetPosition * 0.7 + neighborInfluence * 0.3;
+        state.velocity += (targetWithInfluence - state.position) * 0.025;
+        state.velocity *= 0.85;
+        state.position += state.velocity;
+
+        if (Math.random() < 0.03) {
+          if (Math.random() < 0.45) {
+            state.targetPosition = 70 + Math.random() * 30;
+          } else {
+            state.targetPosition = Math.random() * 70;
+          }
+        }
+
+        state.scaleY = 0.9 + Math.sin(state.position * 0.05) * 0.15;
+        state.skewX = Math.sin(state.position * 0.08) * 3;
+
+        fireStrips[index].style.backgroundPosition = `0% ${state.position}%`;
+        fireStrips[index].style.transform = `scaleY(${state.scaleY}) skewX(${state.skewX}deg)`;
+      });
+
+      if (fireplaceOn) {
+        fireAnimationFrame = requestAnimationFrame(animateFireStrips);
+      }
+    }
+
+    const updateTitleAnimation = () => {
+      const title = document.getElementById('pageTitle');
+
+      if (fireplaceOn) {
+        title.classList.remove('off');
+        title.classList.add('on');
+
+        if (fireStrips.length === 0) {
+          initFireStrips();
+        }
+
+        if (fireAnimationFrame === null) {
+          animateFireStrips();
+        }
+      } else {
+        title.classList.remove('on');
+        title.classList.add('off');
+
+        if (fireAnimationFrame !== null) {
+          cancelAnimationFrame(fireAnimationFrame);
+          fireAnimationFrame = null;
+        }
+      }
+    }
+
+    // Populate temperature dropdown (60-80°F)
+    const populateTempSelect = () => {
+      const tempSelect = document.getElementById('targetTemp');
+      if (!tempSelect) return;
+
+      tempSelect.innerHTML = '';
+
+      if (useCelsius) {
+        for (let i = 15; i <= 27; i++) {
+          const opt = document.createElement('option');
+          opt.value = Math.round((i * 9 / 5) + 32);
+          opt.textContent = i + '\u00B0C';
+          tempSelect.appendChild(opt);
+        }
+      } else {
+        for (let i = 60; i <= 80; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = i + '\u00B0F';
+          tempSelect.appendChild(opt);
+        }
+      }
+    }
+
+    // Initialize dropdowns
+    const initializeDropdowns = () => {
+      // Populate hour dropdowns (0-23)
+      const startSelect = document.getElementById('startHour');
+      const endSelect = document.getElementById('endHour');
+      for (let i = 0; i < 24; i++) {
+        const optStart = document.createElement('option');
+        const optEnd = document.createElement('option');
+        const label = i.toString().padStart(2, '0') + ':00';
+        optStart.value = optEnd.value = i;
+        optStart.textContent = optEnd.textContent = label;
+        startSelect.appendChild(optStart);
+        endSelect.appendChild(optEnd);
+      }
+    }
+
+    // Update client time display (compact format)
+    const updateDateTime = () => {
+      if (serverTime) {
+        const now = new Date(serverTime.getTime() + clientTimeOffset);
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        const hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+
+        const dateStr = days[now.getDay()] + ' ' +
+                       months[now.getMonth()] + ' ' +
+                       now.getDate() + ' ' +
+                       displayHours + ':' + minutes + ' ' + ampm;
+
+        document.getElementById('datetime').textContent = dateStr;
+
+        clientTimeOffset += 1000; // Increment by 1 second
+      }
+    }
+
+    // Auto-save settings on any change
+    const autoSave = () => {
+      let daysMask = 0;
+      for (let i = 0; i < 7; i++) {
+        if (document.getElementById('day' + i).checked) {
+          daysMask |= (1 << i);
+        }
+      }
+
+      const settings = {
+        enabled: document.getElementById('thermostatEnabled').checked,
+        target: parseInt(document.getElementById('targetTemp').value),
+        days: daysMask,
+        startHour: parseInt(document.getElementById('startHour').value),
+        endHour: parseInt(document.getElementById('endHour').value)
+      };
+
+      fetch('/settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(settings)
+      });
+    }
+
+    // Toggle advanced settings
+    const toggleSettings = () => {
+      const panel = document.getElementById('settingsPanel');
+      const backdrop = document.getElementById('settingsBackdrop');
+      panel.classList.toggle('open');
+      backdrop.classList.toggle('open');
+    }
+
+    // Save advanced settings
+    const saveAdvanced = () => {
+      // Get values from inputs
+      let hystValue = parseFloat(document.getElementById('hysteresis').value);
+      let threshValue = parseFloat(document.getElementById('outdoorThreshold').value);
+
+      // Convert to Fahrenheit if currently in Celsius
+      if (useCelsius) {
+        hysteresisF = hystValue * 9 / 5; // Hysteresis is a delta, so just multiply
+        thresholdF = cToF(threshValue);
+      } else {
+        hysteresisF = hystValue;
+        thresholdF = threshValue;
+      }
+
+      // Send to server in Fahrenheit
+      const advanced = {
+        hysteresis: hysteresisF,
+        threshold: thresholdF
+      };
+
+      fetch('/advanced', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(advanced)
+      });
+    }
+
+    // Reset WiFi settings
+    const resetWiFi = () => {
+      if (confirm('Reset WiFi settings? Device will restart in AP mode.')) {
+        fetch('/resetwifi', {method: 'POST'})
+        .then(() => {
+          alert('WiFi reset! Device restarting...\nConnect to "FireplaceRemote" AP');
+        })
+        .catch(() => alert('Reset command sent'));
+      }
+    }
+
+    // Load settings on page load
+    const loadSettings = () => {
+      fetch('/settings')
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('thermostatEnabled').checked = data.enabled;
+          document.getElementById('targetTemp').value = data.target;
+          document.getElementById('startHour').value = data.startHour;
+          document.getElementById('endHour').value = data.endHour;
+          for (let i = 0; i < 7; i++) {
+            document.getElementById('day' + i).checked = (data.days >> i) & 1;
+          }
+          // Load advanced settings (stored in Fahrenheit on server)
+          if (data.hysteresis !== undefined) {
+            hysteresisF = data.hysteresis;
+            document.getElementById('hysteresis').value = data.hysteresis;
+          }
+          if (data.threshold !== undefined) {
+            thresholdF = data.threshold;
+            document.getElementById('outdoorThreshold').value = data.threshold;
+          }
+          // Update display if using Celsius
+          if (useCelsius) {
+            updateAdvancedSettingsUnits();
+          }
+        });
+    }
+
+    // Convert F to C
+    const fToC = (f) => {
+      return (f - 32) * 5 / 9;
+    }
+
+    // Convert C to F
+    const cToF = (c) => {
+      return (c * 9 / 5) + 32;
+    }
+
+    // Toggle temperature units
+    const toggleUnits = () => {
+      useCelsius = document.getElementById('unitToggle').checked;
+      const currentValue = document.getElementById('targetTemp').value;
+      populateTempSelect();
+      document.getElementById('targetTemp').value = currentValue;
+      updateDisplayedTemperatures();
+      updateAdvancedSettingsUnits();
+    }
+
+    // Update advanced settings display based on unit selection
+    const updateAdvancedSettingsUnits = () => {
+      const hysteresisInput = document.getElementById('hysteresis');
+      const thresholdInput = document.getElementById('outdoorThreshold');
+      const hysteresisLabel = document.getElementById('hysteresisLabel');
+      const thresholdLabel = document.getElementById('thresholdLabel');
+
+      if (useCelsius) {
+        // Convert to Celsius for display
+        hysteresisInput.value = (hysteresisF * 5 / 9).toFixed(1); // Delta conversion
+        hysteresisInput.min = 0.3;
+        hysteresisInput.max = 5.6;
+        hysteresisInput.step = 0.3;
+
+        thresholdInput.value = Math.round(fToC(thresholdF));
+        thresholdInput.min = -1;
+        thresholdInput.max = 27;
+        thresholdInput.step = 1;
+
+        hysteresisLabel.innerHTML = 'Temperature Hysteresis (&deg;C)';
+        thresholdLabel.innerHTML = 'Outdoor Temperature Threshold (&deg;C)';
+      } else {
+        // Display in Fahrenheit
+        hysteresisInput.value = hysteresisF.toFixed(1);
+        hysteresisInput.min = 0.5;
+        hysteresisInput.max = 10;
+        hysteresisInput.step = 0.5;
+
+        thresholdInput.value = Math.round(thresholdF);
+        thresholdInput.min = 30;
+        thresholdInput.max = 80;
+        thresholdInput.step = 1;
+
+        hysteresisLabel.innerHTML = 'Temperature Hysteresis (&deg;F)';
+        thresholdLabel.innerHTML = 'Outdoor Temperature Threshold (&deg;F)';
+      }
+    }
+
+    // Update displayed temperatures based on unit selection
+    const updateDisplayedTemperatures = () => {
+      if (useCelsius) {
+        document.getElementById('temperature').textContent = Math.round(fToC(indoorTempF));
+        document.getElementById('tempUnit').innerHTML = '&deg;C';
+        if (outdoorTempF !== 999) {
+          document.getElementById('outdoor').textContent = Math.round(fToC(outdoorTempF));
+          document.getElementById('outdoorUnit').innerHTML = '&deg;C';
+        }
+      } else {
+        document.getElementById('temperature').textContent = Math.round(indoorTempF);
+        document.getElementById('tempUnit').innerHTML = '&deg;F';
+        if (outdoorTempF !== 999) {
+          document.getElementById('outdoor').textContent = Math.round(outdoorTempF);
+          document.getElementById('outdoorUnit').innerHTML = '&deg;F';
+        }
+      }
+    }
+
+    // Update temperature and get server time
+    const updateTemperature = () => {
+      fetch('/temperature')
+        .then(r => r.json())
+        .then(data => {
+          indoorTempF = data.indoor;
+          outdoorTempF = data.outdoor;
+          updateDisplayedTemperatures();
+
+          // Update fireplace state from server
+          if (data.fireplaceOn !== undefined && data.fireplaceOn !== fireplaceOn) {
+            fireplaceOn = data.fireplaceOn;
+            updateTitleAnimation();
+          }
+
+          // Get server time
+          if (data.timestamp) {
+            serverTime = new Date(data.timestamp * 1000);
+            clientTimeOffset = 0;
+          }
+        });
+    }
+
+    // Send IR command
+    const sendCommand = (button, btnElement) => {
+      // Remove focus immediately
+      if (btnElement) {
+        btnElement.blur();
+      }
+
+      // Prevent double-sending: block if already sending or within 1 second of last command
+      const now = Date.now();
+      if (isSending || (now - lastCommandTime < 1000)) {
+        console.log('Command blocked: too soon after previous command');
+        return;
+      }
+
+      isSending = true;
+      lastCommandTime = now;
+
+      fetch('/cmd?button=' + button)
+        .then(r => {
+          if (r.ok) {
+            // Toggle fireplace state if POWER button pressed
+            if (button === 1) {
+              fireplaceOn = !fireplaceOn;
+              updateTitleAnimation();
+            }
+          }
+          isSending = false;
+        })
+        .catch(() => {
+          isSending = false;
+        });
+    }
+
+    // Toggle theme between light and dark
+    const toggleTheme = () => {
+      const isDark = document.getElementById('themeToggle').checked;
+      if (isDark) {
+        document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-theme');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // Initialize theme toggle checkbox
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.getElementById('themeToggle').checked = true;
+    }
+
+    // Initialize
+    initializeDropdowns();
+    populateTempSelect();
+    loadSettings();
+
+    // Initial data will be injected by server
+    if (typeof INITIAL_DATA !== 'undefined') {
+      indoorTempF = INITIAL_DATA.indoor;
+      outdoorTempF = INITIAL_DATA.outdoor;
+      fireplaceOn = INITIAL_DATA.fireplaceOn;
+      serverTime = new Date(INITIAL_DATA.timestamp * 1000);
+      clientTimeOffset = 0;
+      updateDisplayedTemperatures();
+      updateTitleAnimation();
+      updateDateTime();
+    }
+
+    setInterval(updateTemperature, 5000);
+    setInterval(updateDateTime, 1000);
+  </script>
+</body>
+</html>
+)HTMLPAGE";
