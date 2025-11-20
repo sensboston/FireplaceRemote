@@ -26,9 +26,9 @@ const uint8_t BTN_TOGGLE_AIR = 4;
 // Temperature filtering
 const float TEMP_MIN_VALID = 30.0;          // Minimum valid temperature (°F)
 const float TEMP_MAX_VALID = 120.0;         // Maximum valid temperature (°F)
-const uint8_t TEMP_SAMPLES = 5;             // Number of samples for averaging
+const uint8_t TEMP_SAMPLES = 10;            // Number of samples for averaging
 const float TEMP_UPDATE_THRESHOLD = 0.5;    // Update UI only if change >= 0.5°F
-const float ESP32_HEAT_C = 5.2;             // Internal heat value produced by ESP32 board
+const float ESP32_HEAT_C = 4.1;             // Internal heat value produced by ESP32 board
 
 // Temperature reading intervals
 const unsigned long TEMP_READ_INTERVAL = 500;           // Read sensor 2 times per second
