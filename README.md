@@ -45,9 +45,9 @@ _Production device_
 
 ## Hardware Requirements
 
-- **ESP32 Development Board** (tested with ESP32-WROOM-32)
-- **IR LED Transmitter** (38kHz)
-- **Dallas DS18B20 Temperature Sensor** (1-Wire)
+- **ESP32 Development Board** (tested with ESP32-WROOM-32) [Amazon](https://www.amazon.com/ESP-WROOM-32-Development-Microcontroller-Integrated-Compatible/dp/B08D5ZD528)
+- **IR LED Transmitter** (38kHz) [Amazon](https://www.amazon.com/Digital-Receiver-Transmitter-Electronic-Building/dp/B0DSVZ7NNC)
+- **Dallas DS18B20 Temperature Sensor** (1-Wire) [Amazon](https://www.amazon.com/dp/B0CPXKS54H)
 - **4.7kΩ Resistor** (pull-up for DS18B20 data line)
 - **Current Limiting Resistor** for IR LED (typically 100-330Ω)
 - **Duraflame Electric Fireplace** (compatible model)
