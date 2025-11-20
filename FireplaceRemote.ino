@@ -24,35 +24,32 @@ const uint8_t BTN_LESS_HOT = 3;
 const uint8_t BTN_TOGGLE_AIR = 4;
 
 // Temperature filtering
-const float TEMP_MIN_VALID = 30.0;      // Minimum valid temperature (°F)
-const float TEMP_MAX_VALID = 120.0;     // Maximum valid temperature (°F)
-const uint8_t TEMP_SAMPLES = 10;        // Number of samples for averaging
-const float TEMP_UPDATE_THRESHOLD = 0.5; // Update UI only if change >= 0.5°F
+const float TEMP_MIN_VALID = 30.0;          // Minimum valid temperature (°F)
+const float TEMP_MAX_VALID = 120.0;         // Maximum valid temperature (°F)
+const uint8_t TEMP_SAMPLES = 5;             // Number of samples for averaging
+const float TEMP_UPDATE_THRESHOLD = 0.5;    // Update UI only if change >= 0.5°F
+const float ESP32_HEAT_C = 5.2;             // Internal heat value produced by ESP32 board
 
 // Temperature reading intervals
-const unsigned long TEMP_READ_INTERVAL = 1000;     // Read sensor every 1 second
-const unsigned long WEATHER_UPDATE_INTERVAL = 1800000; // Update weather every 30 min
+const unsigned long TEMP_READ_INTERVAL = 500;           // Read sensor 2 times per second
+const unsigned long WEATHER_UPDATE_INTERVAL = 1800000;  // Update weather every 30 min
 
 // Thermostat defaults
-const float DEFAULT_TARGET_TEMP = 72.0;           // Default target temperature (°F)
-const float DEFAULT_TEMP_HYSTERESIS = 2.0;        // Turn on when temp drops 2°F below target
-const float DEFAULT_OUTDOOR_TEMP_THRESHOLD = 50.0; // Only run when outdoor < 50°F
-const uint8_t DEFAULT_START_HOUR = 8;             // Default schedule start: 8 AM
-const uint8_t DEFAULT_END_HOUR = 22;              // Default schedule end: 10 PM
-const uint8_t DEFAULT_DAYS_MASK = 0b01111111;     // All days enabled by default (Mon-Sun)
+const float DEFAULT_TARGET_TEMP = 72.0;             // Default target temperature (°F)
+const float DEFAULT_TEMP_HYSTERESIS = 2.0;          // Turn on when temp drops 2°F below target
+const float DEFAULT_OUTDOOR_TEMP_THRESHOLD = 50.0;  // Only run when outdoor < 50°F
+const uint8_t DEFAULT_START_HOUR = 8;               // Default schedule start: 8 AM
+const uint8_t DEFAULT_END_HOUR = 22;                // Default schedule end: 10 PM
+const uint8_t DEFAULT_DAYS_MASK = 0b01111111;       // All days enabled by default (Mon-Sun)
 
 // Manual override duration (milliseconds)
 const unsigned long MANUAL_OVERRIDE_DURATION = 300000; // 5 minutes
 
 // Button colors for UI
 const char* COLOR_POWER = "#e74c3c";        // Red
-const char* COLOR_POWER_HOVER = "#c0392b";  // Dark red
 const char* COLOR_MORE_HOT = "#e67e22";     // Orange
-const char* COLOR_MORE_HOT_HOVER = "#d35400"; // Dark orange
 const char* COLOR_LESS_HOT = "#27ae60";     // Green
-const char* COLOR_LESS_HOT_HOVER = "#229954"; // Dark green
 const char* COLOR_TOGGLE_AIR = "#3498db";   // Blue
-const char* COLOR_TOGGLE_AIR_HOVER = "#2980b9"; // Dark blue
 
 // OpenWeatherMap API
 #include "secrets.h"
@@ -191,7 +188,9 @@ void handleWiFiReconnection();
 void readTemperature()
 {
     sensors.requestTemperatures();
-    float tempC = sensors.getTempCByIndex(0);
+
+    // We should substract internal ESP32 produced heat
+    float tempC = sensors.getTempCByIndex(0) - ESP32_HEAT_C;
     
     if (tempC != DEVICE_DISCONNECTED_C) {
         float tempF = (tempC * 9.0 / 5.0) + 32.0;
