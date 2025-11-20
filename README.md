@@ -1,6 +1,22 @@
 # Fireplace Remote Control
 
-WiFi-enabled remote control system for Duraflame electric fireplaces using ESP32 microcontroller.
+
+![Screenshot_20251118_222841_Easy PWA](https://github.com/user-attachments/assets/17a3857c-e729-4103-a444-b63d7a4d3bb8)
+![Screenshot_20251119_162406_Easy PWA](https://github.com/user-attachments/assets/8807ea2a-9acb-47fb-9802-e7618a5c2446)
+
+_Web app screenshots_
+
+![20251118_182410](https://github.com/user-attachments/assets/0a6497ae-8979-4a4e-8e28-708752120b4c)
+
+_Prototype_
+
+![20251119_163200](https://github.com/user-attachments/assets/5cee2718-a5c9-4454-b4c4-04014ea85ab9)
+
+_Production device_
+
+
+## WiFi-enabled remote control system for Duraflame electric fireplaces using ESP32 microcontroller.
+
 
 ## Features
 
@@ -29,9 +45,9 @@ WiFi-enabled remote control system for Duraflame electric fireplaces using ESP32
 
 ## Hardware Requirements
 
-- **ESP32 Development Board** (tested with ESP32-WROOM-32)
-- **IR LED Transmitter** (38kHz)
-- **Dallas DS18B20 Temperature Sensor** (1-Wire)
+- **ESP32 Development Board** (tested with ESP32-WROOM-32) [Amazon](https://www.amazon.com/ESP-WROOM-32-Development-Microcontroller-Integrated-Compatible/dp/B08D5ZD528)
+- **IR LED Transmitter** (38kHz) [Amazon](https://www.amazon.com/Digital-Receiver-Transmitter-Electronic-Building/dp/B0DSVZ7NNC)
+- **Dallas DS18B20 Temperature Sensor** (1-Wire) [Amazon](https://www.amazon.com/dp/B0CPXKS54H)
 - **4.7kΩ Resistor** (pull-up for DS18B20 data line)
 - **Current Limiting Resistor** for IR LED (typically 100-330Ω)
 - **Duraflame Electric Fireplace** (compatible model)
